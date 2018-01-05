@@ -1,3 +1,10 @@
+#first install plyr and dplyr packages as they will be needed later
+install.packages("plyr")
+library(plyr)
+
+install.packages("dplyr")
+library(dplyr)
+
 #first collect and read all the data we need, for both sets
 testdata<-read.table("test/X_test.txt")
 testsubjects<-read.table("test/subject_test.txt")
@@ -73,23 +80,13 @@ names1<-sub("  "," ",names1)
 allnames<-c("subject number","activity",tolower(names1))
 colnames(allneat)<-allnames
 
-#this data will be presented as a table entirely of mean values.
-#It will not specify 'mean' anywhere, but will assume the reader knows it
-#is a table of mean values. The columns will specify either the subject
-#id (an integer), or the activity name as assigned previously.
-#The row names will each be a variable, using the clearer names produced in
-#part 4
+#this table will presented as a mean per variable for each subject/activity pair
+#this is achieved using the dplyr package, and requires activity to be factors
+#means will run across the columns
+#the subject/activity pairs will run along the rows
 
-mean<-data.frame(matrix(ncol=37,nrow=66))
-colnames(mean)<-c(labels,1:30)
-rownames(mean)<-names1
-
-for (i in 1:length(names1)){
-    for (j in 1:6){
-        mean[i,j]=mean(allneat[,i+2][allneat[,2]==colnames(mean)[j]])
-    }
-    for (j in 7:36)
-        mean[i,j]=mean(allneat[,i+2][allneat[,1]==colnames(mean)[j]])
-}
+allneat$activity<-as.factor(allneat$activity)
+allneat1<-group_by(allneat,`subject number`,activity)
+mean<-summarise_all(allneat1,.funs=c(mean="mean"))
 
 write.table(mean,file = "tidydata.csv")
